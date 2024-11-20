@@ -1,6 +1,7 @@
 package functools
 
 import (
+	"fmt"
 	"iter"
 	"maps"
 	"slices"
@@ -47,4 +48,16 @@ func (iterator Iterator[K, V]) Map(function func(key K, value V) (K, V)) Iterato
 			yield(key, value)
 		}
 	}
+}
+
+func (iterator Iterator[K, V]) String() string {
+	stringBuffer := ""
+	for key, value := range iterator {
+		if stringBuffer == "" {
+			stringBuffer = fmt.Sprintf("%v: %v", key, value)
+		} else {
+			stringBuffer += fmt.Sprintf(", %v: %v", key, value)
+		}
+	}
+	return fmt.Sprintf("Iterator[%s]", stringBuffer)
 }
