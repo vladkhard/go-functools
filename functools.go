@@ -16,7 +16,21 @@ func MapIterator[K comparable, V any](from map[K]V) Iterator[K, V] {
 	return Iterator[K, V](maps.All(from))
 }
 
-func (iterator Iterator[K, V]) Filter(filter func(key K, value V) bool) Iterator[K, V] {
+func (iterator Iterator[int, V]) FilterSlice(filter func(index int, value V) bool) Iterator[int, V] {
+	return func(yield func(int, V) bool) {
+		internalIndex := 0
+		var internalIndexBox int = any(internalIndex).(int)
+		for index, value := range iterator {
+			if filter(index, value) {
+				yield(internalIndexBox, value)
+				internalIndex++
+				internalIndexBox = any(internalIndex).(int)
+			}
+		}
+	}
+}
+
+func (iterator Iterator[K, V]) FilterMap(filter func(key K, value V) bool) Iterator[K, V] {
 	return func(yield func(K, V) bool) {
 		for key, value := range iterator {
 			if filter(key, value) {
