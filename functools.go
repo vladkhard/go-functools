@@ -1,10 +1,24 @@
 package functools
 
-import "iter"
+import (
+	"iter"
+	"maps"
+	"slices"
+)
 
-func Filter[K, V any](iterable iter.Seq2[K, V], filter func(key K, value V) bool) iter.Seq2[K, V] {
+type Iterator[K, V any] iter.Seq2[K, V]
+
+func SliceIterator[K any](from []K) Iterator[int, K] {
+	return Iterator[int, K](slices.All(from))
+}
+
+func MapIterator[K comparable, V any](from map[K]V) Iterator[K, V] {
+	return Iterator[K, V](maps.All(from))
+}
+
+func (iterator Iterator[K, V]) Filter(filter func(key K, value V) bool) Iterator[K, V] {
 	return func(yield func(K, V) bool) {
-		for key, value := range iterable {
+		for key, value := range iterator {
 			if filter(key, value) {
 				yield(key, value)
 			}
@@ -12,27 +26,11 @@ func Filter[K, V any](iterable iter.Seq2[K, V], filter func(key K, value V) bool
 	}
 }
 
-func Map[K, V any](iterable iter.Seq2[K, V], function func(key K, value V) (K, V)) iter.Seq2[K, V] {
+func (iterator Iterator[K, V]) Map(function func(key K, value V) (K, V)) Iterator[K, V] {
 	return func(yield func(K, V) bool) {
-		for key, value := range iterable {
+		for key, value := range iterator {
 			key, value = function(key, value)
 			yield(key, value)
 		}
 	}
-}
-
-func ToSlice[V any](iterable iter.Seq2[int, V]) []V {
-	var result []V
-	for _, value := range iterable {
-		result = append(result, value)
-	}
-	return result
-}
-
-func ToMap[K comparable, V any](iterable iter.Seq2[K, V]) map[K]V {
-	result := make(map[K]V)
-	for key, value := range iterable {
-		result[key] = value
-	}
-	return result
 }
