@@ -17,12 +17,12 @@ func MapIterator[K comparable, V any](from map[K]V) Iterator[K, V] {
 	return Iterator[K, V](maps.All(from))
 }
 
-func (iterator Iterator[int, V]) FilterSlice(filter func(index int, value V) bool) Iterator[int, V] {
+func (iterator Iterator[int, V]) FilterSlice(predicate func(index int, value V) bool) Iterator[int, V] {
 	return func(yield func(int, V) bool) {
 		internalIndex := 0
 		var internalIndexBox int = any(internalIndex).(int)
 		for index, value := range iterator {
-			if filter(index, value) {
+			if predicate(index, value) {
 				yield(internalIndexBox, value)
 				internalIndex++
 				internalIndexBox = any(internalIndex).(int)
@@ -31,10 +31,10 @@ func (iterator Iterator[int, V]) FilterSlice(filter func(index int, value V) boo
 	}
 }
 
-func (iterator Iterator[K, V]) FilterMap(filter func(key K, value V) bool) Iterator[K, V] {
+func (iterator Iterator[K, V]) FilterMap(predicate func(key K, value V) bool) Iterator[K, V] {
 	return func(yield func(K, V) bool) {
 		for key, value := range iterator {
-			if filter(key, value) {
+			if predicate(key, value) {
 				yield(key, value)
 			}
 		}
@@ -60,4 +60,22 @@ func (iterator Iterator[K, V]) String() string {
 		}
 	}
 	return fmt.Sprintf("Iterator[%s]", stringBuffer)
+}
+
+func (iterator Iterator[K, V]) All(predicate func(key K, value V) bool) bool {
+	for key, value := range iterator {
+		if !predicate(key, value) {
+			return false
+		}
+	}
+	return true
+}
+
+func (iterator Iterator[K, V]) Any(predicate func(key K, value V) bool) bool {
+	for key, value := range iterator {
+		if predicate(key, value) {
+			return true
+		}
+	}
+	return false
 }
